@@ -1,5 +1,5 @@
 
-# Excercise 3: Social Inequality
+# Task 1: Gender wage gap
 
 **Author:** Cintya Huaire  
 **Date:** 2023-02-23

@@ -1,4 +1,4 @@
-# Excercise 4 - Social Inequality
+# Task 2 - Education and employment
 
 **Author:** Cintya Huaire  
 **Date:** 2023-03-02

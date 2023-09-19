@@ -1,4 +1,4 @@
-# Excercise 7: Social Inequality
+# Task 3: Social Inequality
 
 ## Overview
 

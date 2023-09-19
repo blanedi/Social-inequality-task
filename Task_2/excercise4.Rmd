@@ -1,5 +1,5 @@
 ---
-title: "Excercise 4- Social inequality"
+title: "Excercise 2- Social inequality"
 author: "Cintya Huaire"
 date: '2023-03-02'
 output:
