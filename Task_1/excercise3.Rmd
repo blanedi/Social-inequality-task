@@ -1,0 +1,295 @@
+---
+title: "Excercise 3- Social inequality"
+author: "Cintya Huaire"
+date: '2023-02-23'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include = FALSE}
+library(tidyverse)
+library(dplyr)
+library(haven) 
+library(descr) 
+library(corrplot) 
+library(stargazer)
+library(knitr)
+library(kableExtra)
+library(janitor)
+
+```
+
+**Data Preparation**
+
+See Annex
+
+```{r,echo=FALSE}
+
+# Load the data for 2009 and 2019
+# Source: GESIS (2019)."ISSP 2019 "Social Inequality V" - ZA No. 7600".Extract:02/23 https://www.gesis.org/en/issp/modules/issp-modules-by-topic/social-inequality/2019
+
+# data
+data_issp <- read_dta("/Users/CINTYAHUAIRE1/Downloads/Data_Exercise03.dta")
+
+# Filter the data for Croatia
+data_philipines <- data_issp %>% filter(country == 608)
+data_philipines <- data_philipines[,c("country","SEX","MARITAL","DEGREE","PCLASS","CLASS","CLASS_SPOUSE","HHCHILDR","HHTODD","ISCO08","SPISCO08","WORRY")]
+
+```
+
+## Excercise 3.1.a
+
+**Is social class (CLASS) correlated with perceived social class (PCLASS)? Calculate Spearman's rank correlation coefficient by gender**
+
+```{r,echo=FALSE}
+
+#Spearman’s Rank correlation social class
+female<-subset(data_philipines,data_philipines$SEX==2)
+male <-subset(data_philipines,data_philipines$SEX==1)
+perceived_fem<-cor(female$CLASS, female$PCLASS, method = "spearman",use = "complete.obs") 
+perceived_mal<-cor(male$CLASS, male$PCLASS, method = "spearman",use = "complete.obs")
+
+
+# Display the results
+cat("Spearman´s rank social class female:", perceived_fem, "\n")
+cat("Spearman´s rank social class male:", perceived_mal, "\n")
+
+```
+
+The Spearman's rank correlation coefficient was used in this study to analyze the correlation between social class and perceived class in the Philippines, using the ISSP 2019 data. The results showed a very weak positive correlation between these two variables, suggesting that there is some association between them, but only to a small extent. However, the results vary by gender. Females have a stronger correlation between social class and perceived class than men in the Philippines. This indicates that there may be a greater alignment between the objective indicators of social class and the subjective perception of social class among women.
+
+However, it is important to note that correlation does not necessarily imply causation. While a positive correlation between social class and perceived class among women may imply that they perceive themselves to be in a high social class and have a high income, education level, and prestigious occupation, this is not necessarily true for all women in the Philippines.
+
+## Excercise 3.1.b
+
+**Is spousal class (CLASS_SPOUSE) correlated with perceived social class (PCLASS)? Calculate the Spearman rank correlation coefficient by gender**
+
+```{r,echo=FALSE}
+
+#Spearman correlation spouse class
+perceived_spo_fem<-cor(female$CLASS_SPOUSE, female$PCLASS, method = "spearman",use = "complete.obs") 
+perceived_spo_mal<-cor(male$CLASS_SPOUSE, male$PCLASS, method = "spearman",use = "complete.obs")
+
+# Display the results
+
+cat("Spearman´s rank spousal class female:", perceived_spo_fem, "\n")
+cat("Spearman´s rank spousal class male:", perceived_spo_mal, "\n")
+
+```
+
+The Spearman's correlation analysis conducted on the same page as the previous exercise showed a weak but positive correlation between spousal class and perceived social class in the Philippines. However, male subjects showed a slightly stronger correlation than female subjects, suggesting that men may perceive the social class of their spouses as a more important factor in shaping their own perception of social class. This is somewhat surprising given the Philippines' moderate to high Gender Inequality Index (GII) of 0.379, ranking 52nd out of 191 countries[1] . Despite the apparent influence of spousal class on perceived social class, the weak correlation suggests that other factors may play a more significant role in shaping social class perceptions in the Philippines.
+
+[1]United Nations Development Programme. (2021). Human Development Indices and Indicators: 2020 Statistical Update. Retrieved from <http://hdr.undp.org/en/content/2020-human-development-indices-and-indicators>
+
+## Excercise 3.2.a
+
+**Limit the analysis to female respondents with children in the household. Omit all cases with missing information on your key variables of interest (DEGREE, MARITAL, WORRY). How large is the share of persons with financial difficulties (DEP)? How do patterns differ by family status (SINGLE)? Keep in mind that the independent variable should be the column variable and the dependent variable the row variable** Considering that the analysis is mainly fo female with children, the result suggest that almost 73% of the population is financially dependent, which makes sense considering that this group can contain single mothers that are usually more at risk of poverty. However, as the table 02 shows the percent of single mothers is very low, only accounts for 23% of the sample, which can have impact on the results of the data.
+
+```{r,echo=FALSE}
+# limiting the sample size to female with children
+data_femalech <- subset(data_philipines,  SEX== 2 & HHCHILDR >0)
+#Cleaning by missing main variables
+data_femalech<-subset(data_femalech,!(is.na(data_femalech$DEGREE)))
+data_femalech<-subset(data_femalech,!(is.na(data_femalech$MARITAL)))
+data_femalech<-subset(data_femalech,!(is.na(data_femalech$WORRY)))
+
+# Create a new variable dependent financially (dep) and single
+data_femalech$dep <- ifelse(data_femalech$WORRY <=2 , 1,
+                            ifelse(data_femalech$WORRY>= 3, 0, ""))
+ 
+data_femalech$single <- ifelse(data_femalech$MARITAL <=5 , "Married at least once",
+                            ifelse(data_femalech$MARITAL==6, "Single", ""))
+
+#frequency tables
+
+# Display the frequency table for data_femalech$dep
+kable(freq(data_femalech$dep), format = "html", caption = "Table01: Frequency table for financially dependent" )  %>%
+  kable_styling(full_width = FALSE) %>%
+  footnote(general = "Source: GESIS(2023).ISSP 2019 Social Inequality V")
+
+# Display the frequency table for data_femalech$single
+kable(freq(data_femalech$single), format = "html", caption = "Table02: Frequency table for marital status") %>%
+  kable_styling(full_width = FALSE) %>%
+  footnote(general = "Source: GESIS(2023).ISSP 2019 Social Inequality V")
+
+
+
+```
+
+Table 03 shows that the majority of females with children in both categories of financial difficulties are married at least once. Specifically, 79.2% of females with no financial difficulties and 76.5% of females with financial difficulties are married at least once. Meanwhile, a minority of females with children in both categories of financial difficulties are never married. Specifically, 20.8% of females with no financial difficulties and 23.5% of females with financial difficulties are never married.
+
+Overall, the the result suggest that being married at least once is associated with a lower likelihood of experiencing financial difficulties among females with children. However, the difference is relatively small (3pp), and there may be other factors at play that contribute to financial difficulties among females with children.
+
+```{r,echo=FALSE}
+
+# Display the cross-tabulation table for dep and single
+
+
+crosstab_single_dep <- data_femalech %>%         
+  tabyl(dep, single) %>% 
+    adorn_totals(c("row", "col")) %>% 
+    adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 1) %>%
+  adorn_ns() %>% 
+  kbl(caption = "Table 03:Crosstable for relationship between marital status and financial difficulties", booktabs = T,
+     col.names = c("Financial\n difficulties",
+                           "Married at least once",
+                           "Never married",
+                           "Total")) %>% 
+  add_header_above(c(" ", "Marital status" = 2, " ")) %>%
+kable_styling(latex_options = c("striped", "hold_position"))
+
+crosstab_single_dep
+
+```
+
+Additionally, by performing the chi square test is possible to conclude that there is no significant relationship between marital status and financial difficulties among females with children at the 0.05 level of significance. Therefore, the differences in financial difficulties between females who have been married at least once and those who have never been married are likely due to chance and not a significant association between the two variables
+
+```{r,echo=FALSE}
+# Perform chi-squared test for dep and single
+chi_sq_test <- chisq.test(data_femalech$dep, data_femalech$single, correct= F,) 
+chi_sq_test
+
+```
+
+## Excercise 3.2.b
+
+**Estimate a linear probability model with financial difficulties (DEP) as dependent variable. Estimate the following models:** **MODEL 1: SINGLE** **MODEL 2: SINGLE+UNI**
+
+```{r,echo=FALSE}
+
+# Create a new variable to differentiate if it acquire university studies
+
+data_femalech$uni <- ifelse(data_femalech$DEGREE <=4 , "No UNI",
+                            ifelse(data_femalech$DEGREE>= 5, "University", ""))
+ 
+#Analysis: Regression
+model01<-lm(dep ~ single, data = data_femalech)
+model02<-lm(dep~ single+uni, data = data_femalech)
+stargazer(model01,model02,title="Model with difficulties(DEP) as dependent variable",
+          dep.var.labels=c("Model 01","Model 02"),
+          covariate.labels=c("Never married","University education"), type="text",align=TRUE)
+ 
+```
+
+The models above represent that relationship between facing financial difficulties for females with children with being single or having a university education. The results show that university education has a statistically significant negative relationship with difficulties (DEP) in the second model (Model 02), indicated by the coefficient of -0.160 and p-value of less than 0.01. This suggests that women with a university education are less likely to experience difficulties compared to women without a university education, holding other variables constant.
+
+Meanwhile the coefficient for never married is positive, but it is not statistically significant in either model. This suggests that marital status may not be a significant predictor of difficulties.
+
+## Excercise 3.3
+
+**Unmarried parents are at elevated risk of poverty in many countries of the world. Does your investigation support this finding for your country of choice? What are the possible origins of lone mothers' poverty (in your country)? What are your two main important policy recommendations to reduce lone mothers' poverty (in your country)?**
+
+The results show above that in Philippines in particular the relationship of the marital status is not significant, which seems contraintuitive, due to the high gender inequality index (0.379)[1]. This can be explained because this analysis only examines a limited set of independent variables and the data is not always accurate. However the relation is positive even if it is not significative, on that line and considering the GII is possible that single mothers in the Philippines may face greater economic challenges and are at risk of poverty compared to married mothers.
+
+Among the possible origins of lone mothers' poverty in the Philippines as many developing countries is lack of access to education and employment opportunities, inadequate social protection policies and support systems (lack of childcare services), and social stigma and discrimination.[2].
+
+Therefore, the policy suggestions can be focus on: Improving access to education and employment opportunities, by providing financial assistance for education and training, as well as incentives for businesses to hire and support single mothers in the workforce; strengthening social protection policies and support systems by expanding access to social safety net programs, such as cash transfers, child care subsidies, and health insurance, and providing support services, such as child care and counseling, to help single mothers manage their responsibilities and improve their economic well-being.
+
+[1]United Nations Development Programme. (2021). Human Development Indices and Indicators: 2020 Statistical Update. Retrieved from <http://hdr.undp.org/en/content/2020-human-development-indices-and-indicators>
+
+[2]Salam, A. (2019). Single mother poverty in the Philippines: Addressing gaps in policies and programs. Philippine Journal of Development, 46(2), 123-146.
+
+## Excercise 3.4
+
+**Social class (as well as poverty) is a household concept. Discuss!**
+
+Poverty and social class are typically conceived at the household level, with the nuclear family typically composed of one or two breadwinners who ideally distribute resources evenly to family members based on need. However, this model may not always hold true, particularly in some households in Latin America and the Caribbean where extended families may have internal social class divisions.
+
+The division among households between those with full-time and part-time female employment is a significant factor in differentiating households in class terms. Changing gender patterns of labor force participation have not muted the lines of social class division based on occupation and income, but rather reinforced them.
+
+While social class and gender are still debated in contemporary British sociology, theoretical issues surrounding social class and gender remain important for empirical testing. Incorporating a more considered gender dimension or a type of family concept can be beneficial to define better the concept[1].
+
+[1]Bonney, N. (2007). Gender, employment and social class. Work, Employment and Society, 21(1), 143-155. \## Annex
+
+```{r }
+library(tidyverse)
+library(dplyr)
+library(haven) 
+library(descr) 
+library(corrplot) 
+library(stargazer)
+library(knitr)
+library(kableExtra)
+library(janitor)
+# Load the data for 2009 and 2019
+# Source: GESIS (2019)."ISSP 2019 "Social Inequality V" - ZA No. 7600".Extract:02/23 https://www.gesis.org/en/issp/modules/issp-modules-by-topic/social-inequality/2019
+
+# data
+data_issp <- read_dta("/Users/CINTYAHUAIRE1/Downloads/Data_Exercise03.dta")
+
+# Filter the data for Croatia
+data_philipines <- data_issp %>% filter(country == 608)
+data_philipines <- data_philipines[,c("country","SEX","MARITAL","DEGREE","PCLASS","CLASS","CLASS_SPOUSE","HHCHILDR","HHTODD","ISCO08","SPISCO08","WORRY")]
+#Spearman’s Rank correlation social class
+female<-subset(data_philipines,data_philipines$SEX==2)
+male <-subset(data_philipines,data_philipines$SEX==1)
+#perceived_fem<-cor(female$CLASS, female$PCLASS, method = "spearman",use = "complete.obs") 
+#perceived_mal<-cor(male$CLASS, male$PCLASS, method = "spearman",use = "complete.obs")
+# Display the results
+#cat("Spearman´s rank social class female:", perceived_fem, "\n")
+#cat("Spearman´s rank social class male:", perceived_mal, "\n")
+#Spearman correlation spouse class
+#perceived_spo_fem<-cor(female$CLASS_SPOUSE, female$PCLASS, method = "spearman",use = "complete.obs") 
+#perceived_spo_mal<-cor(male$CLASS_SPOUSE, male$PCLASS, method = "spearman",use = "complete.obs")
+
+# Display the results
+
+#cat("Spearman´s rank spousal class female:", perceived_spo_fem, "\n")
+#cat("Spearman´s rank spousal class male:", perceived_spo_mal, "\n")
+
+# limiting the sample size to female with children
+data_femalech <- subset(data_philipines,  SEX== 2 & HHCHILDR >0)
+#Cleaning by missing main variables
+data_femalech<-subset(data_femalech,!(is.na(data_femalech$DEGREE)))
+data_femalech<-subset(data_femalech,!(is.na(data_femalech$MARITAL)))
+data_femalech<-subset(data_femalech,!(is.na(data_femalech$WORRY)))
+
+# Create a new variable dependent financially (dep) and single
+data_femalech$dep <- ifelse(data_femalech$WORRY <=2 , 1,
+                            ifelse(data_femalech$WORRY>= 3, 0, ""))
+ 
+data_femalech$single <- ifelse(data_femalech$MARITAL <=5 , "Married at least once",
+                            ifelse(data_femalech$MARITAL==6, "Single", ""))
+
+#frequency tables
+
+# Display the frequency table for data_femalech$dep
+#kable(freq(data_femalech$dep), format = "html", caption = "Table01: Frequency table for financially dependent" )  %>%
+#  kable_styling(full_width = FALSE) %>%
+#  footnote(general = "Source: GESIS(2023).ISSP 2019 Social Inequality V")
+
+# Display the frequency table for data_femalech$single
+#kable(freq(data_femalech$single), format = "html", caption = "Table02: Frequency table for marital status") %>%
+#  kable_styling(full_width = FALSE) %>%
+ # footnote(general = "Source: GESIS(2023).ISSP 2019 Social Inequality V")
+
+# Display the cross-tabulation table for dep and single
+
+
+#crosstab_single_dep <- data_femalech %>%         
+ # tabyl(dep, single) %>% 
+  #  adorn_totals(c("row", "col")) %>% 
+#    adorn_percentages("row") %>%
+#  adorn_pct_formatting(digits = 1) %>%
+#  adorn_ns() %>% 
+#  kbl(caption = "Table 03:Crosstable for relationship between marital status and financial difficulties", booktabs = T,
+ #    col.names = c("Financial\n difficulties",
+  #                         "Married at least once",
+   #                        "Never married",
+    #                       "Total")) %>% 
+#  add_header_above(c(" ", "Marital status" = 2, " ")) %>%
+#kable_styling(latex_options = c("striped", "hold_position"))
+
+#crosstab_single_dep
+
+# Perform chi-squared test for dep and single
+#chi_sq_test <- chisq.test(data_femalech$dep, data_femalech$single, correct= F,) 
+#chi_sq_test
+
+```

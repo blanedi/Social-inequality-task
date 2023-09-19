@@ -1,0 +1,201 @@
+---
+title: "Excercise 4- Social inequality"
+author: "Cintya Huaire"
+date: '2023-03-02'
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include = FALSE}
+library(tidyverse)
+library(dplyr)
+library(haven) 
+library(descr) 
+library(corrplot) 
+library(stargazer)
+library(knitr)
+library(kableExtra)
+
+```
+
+**Data Preparation**
+
+See Annex
+
+```{r,echo=FALSE}
+
+# Load PISA data
+# Source: PISA 2018. https://www.oecd.org/pisa/data/ 
+
+# data
+data_pisa <- read_dta("/Users/CINTYAHUAIRE1/Downloads/PISA2018.dta")
+
+
+# Filter  and cleaning the data for JAPAN
+data_JPN <- data_pisa %>% filter(CNT == "JPN")
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$ST004D01T)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$BSMJ)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$BMMJ1)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$BFMJ2)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$AGE)))
+data_JPN <- data_JPN %>% filter(AGE>=15 & AGE <=16)
+data_JPN$ST004D01T <- ifelse(data_JPN$ST004D01T ==1 , 1,
+                            ifelse(data_JPN$ST004D01T== 2, 0, ""))
+
+#renaming
+data_JPN <- data_JPN %>% 
+  rename(GENDER = ST004D01T , ISEI= BSMJ , MISEI= BMMJ1 , FISEI= BFMJ2)
+
+```
+
+## Excercise 4.1
+
+**Formulate a hypothesis on the influence of parental social status on children’s (expected) social status. The readings on moodle may be helpful to generate a testable hypothesis. [about 250 words]**
+
+Japan is a developed country with stable macroeconomic indicators, low poverty rate (0.7), high life expectancy (85 years old,one of the highest in the world), low unemployment(2.8%) [1], and is the 15th country in the world with the highest level of social mobility in the world according to World Economic Forum[2]. However, Japan has a high gender inequality, more that some countries in LAC, on 2022 placed 116th out of 146 countries on the global gender gap index, placing far behind other G7 nations [3]. 
+
+On that line, considering the social mobility index and the gender gap index. The hypothesis to test is : *"Parental social status has a positive influence on the expected social status of boys and a limited or negligible effect on girls in Japan, where social mobility is relatively high, but gender inequality persists".* 
+
+This hypothesis aligns with research that has found that gender differences in social mobility persist in many countries, with boys being more likely to move up the social ladder than girls, even in societies with high levels of social mobility[4].
+
+
+
+[1]World Bank (2023). Japan overview. Retrieved 01.03 from https://data.worldbank.org/country/JP
+
+[2] *"The Global Social Mobility Index, however, focuses on drivers of relative social mobility instead of outcomes.(...)It uses 10 pillars, which in turn are broken down into five determinants of social mobility – health, education, technology access, work opportunities, working conditions and fair wages and finally, social protection and inclusive institutions."*.Global Social Mobility Index (2020). Retrieved 01.03 from: https://jp.weforum.org/reports/global-social-mobility-index-2020-why-economies-benefit-from-fixing-inequality/
+
+[3]World Economic Forum. (July 13, 2022). Gender gap index in Japan from 2016 to 2022 [Graph]. In Statista. Retrieved 01.03 from https://www.statista.com/statistics/1227300/japan-gender-gap-index/
+
+[4] Blanden, J., Gregg, P., & Macmillan, L. (2007). Accounting for intergenerational income persistence: Noncognitive skills, ability and education. The Economic Journal, 117(519), C43-C60.
+
+## Excercise 4.2
+
+**Estimate the following OLS-regression models with expected social status as dependent variable (ISEI). Does parental background influence own social status? Is father or mother’s social status more important for own (expected) social status? **
+
+The model below suggest that both the ISEI of the father and mother have a positive and significant effect on the expected social status (ISEI) of their children (coefficients of 0.167 and 0.107, respectively, with p < 0.01). This suggests that parental social status has a significant influence on the expected social status of their children, which is consistent with the initial hypothesis.
+
+Moreover, the coefficient for age is not statistically significant in both models, indicating that age does not have a significant effect on expected social status. On the other hand, the coefficient for gender is negative and statistically significant in both Model 01 and Model 02 at the 1% level, indicating that females have a lower expected social status than males. Specifically, the coefficient suggests that the expected social status of females is around 4 points lower than that of males, after controlling for the effects of parental social status and other variables in the model.
+
+This result  is coherent with the previous data and the hypothesis that suggests that gender inequality persists in Japan, even in a context of relatively high social mobility.However,the R-squared values for both models are relatively low, indicating that the independent variables in the models only explain a small proportion of the variation in expected social status. 
+
+```{r,echo=FALSE}
+
+#Analysis: Regression
+
+
+model01<-lm(ISEI ~ FISEI + AGE + GENDER, data = data_JPN)
+model02<-lm(ISEI~ FISEI + MISEI + AGE + GENDER, data = data_JPN)
+stargazer(model01,model02,title="Table 01: Model with expected social status (ISEI) as dependent variable",
+          dep.var.labels=c("Model 01","Model 02"),
+          covariate.labels=c("ISEI Father","ISEI Mother","Age","Gender (F=1, M=0)"), type="text",note="Source: OECD(2023). Pisa data.  https://www.oecd.org/pisa/data/ ",align=TRUE)
+
+
+
+```
+
+
+
+## Excercise 4.3
+
+**Do patterns differ by gender? Estimate the following models and interpret the results**
+
+Table 02 show that for both girls and boys, the father's ISEI has a positive and statistically significant effect on the expected social status of children. The mother's ISEI also has a positive effect on girls' expected social status but has a weaker and statistically significant effect on boys' expected social status. Moreover, these findings suggest that parental social status has a positive influence on the expected social status of both girls and boys in Japan, but the effect is stronger for fathers than for mothers.
+
+Regarding age variable there is no significant effect for either boy or girl, but the direction of the effect is different for girls and boys. For girls, the coefficient for age is positive, which could suggest that age has a limited effect on their expected social status. For boys, however, the coefficient for age is negative, indicating that older boys have a lower expected social status than younger boys
+
+```{r,echo=FALSE}
+
+#model 03
+
+FEMALE<-subset(data_JPN,data_JPN$GENDER==1) 
+MALE <-subset(data_JPN,data_JPN$GENDER==0)
+
+model03_g<-lm(ISEI ~ FISEI + MISEI + AGE, data = FEMALE)
+model03_b<-lm(ISEI~ FISEI + MISEI + AGE, data = MALE)
+stargazer(model03_g,model03_b,title="Table 02: Model with expected social status (ISEI) as dependent variable by gender",
+          dep.var.labels=c("Model by gender(1= girls, 2= boys)"),
+          covariate.labels=c("ISEI Father","ISEI Mother","Age"), type="text",note="Source: OECD(2023). Pisa data.  https://www.oecd.org/pisa/data/", align=TRUE)
+
+```
+
+
+## Excercise 4.4.a
+
+**Which factors may be on the causal pathway between parental social class and own social class which would be important to account for in further investigations?** 
+
+The variables analyzed below, although significant and in line with expectations, explain only a small portion of the relationship between parental and children's social class in Japan, as mentioned in section 4.2. Therefore, to gain a deeper understanding of this relationship, it is necessary to include additional variables, such as the education level of the parents. In Japan, higher education levels are often associated with higher social status, better job opportunities, and higher income and occupational prestige. Additionally, occupation of the parents should also be considered in further investigations, given that Japan has a highly stratified occupational structure, with certain professions being associated with higher social status than others, such as doctors or engineers[1]. Furthermore, cultural capital indicators, such as parental participation in cultural activities like theater, tea ceremonies, or art exhibitions, could also be related to social status, as seen in many other Western countries with the exception of the tea ceremony.
+
+
+[1]Source: Nishimura, Y. (2017). Education, Social Mobility, and Inequality in Japan. https://www.researchgate.net/profile/Mikiko-Nishimura/publication/338418473_Service-Learning_as_a_Means_to_Understand_Socio-Economic_Privilege_Inequality_and_Social_Mobility/links/5e858221299bf1307970e631/Service-Learning-as-a-Means-to-Understand-Socio-Economic-Privilege-Inequality-and-Social-Mobility.pdf
+
+
+
+## Excercise 4.4.b
+
+**Are there any problems that pertain to measurement and sample which may have affected your analysis? ** 
+
+Based on the results presented in the table, there may be some problems related to measurement and sample that could have affected the analysis. Social status is a complex and multidimensional construct that cannot be fully captured by a single measure, and using a single measure like ISEI to represent social status may not fully reflect the complexity of the construct. Additionally, using a single measure like ISEI to represent parental social class may not fully reflect the complexity of the construct. In fact, Breen(2010) argue that social mobility is not a good way to measure equality of opportunity under any definition of the term, as it is influenced by many complicated social and economic processes that are difficult to capture with a single measure [1]. Therefore, it is important to consider the limitations of using social mobility as a measure of equality of opportunity and to approach it with caution when interpreting the results.
+
+Finally, the model does not include all the possible variables that could affect the relationship between parental social class and own social class, which could lead to biased estimates of the effects of parental social class on own social class. Overall, it is important to acknowledge the limitations of the study and to consider the potential impact of these issues when drawing conclusions from the analysis.
+
+[1] Breen, R. (2010). Social Mobility and Equality of Opportunity Geary Lecture Spring 2010. The Economic and Social Review, Vol. 41, No. 4, Winter, 2010, pp. 413–428.
+
+
+## Annex
+
+```{r }
+library(tidyverse)
+library(dplyr)
+library(haven) 
+library(descr) 
+library(corrplot) 
+library(stargazer)
+library(knitr)
+library(kableExtra)
+
+# Load PISA data
+# Source: PISA 2018. https://www.oecd.org/pisa/data/ 
+
+# data
+data_pisa <- read_dta("/Users/CINTYAHUAIRE1/Downloads/PISA2018.dta")
+
+
+# Filter  and cleaning the data for JAPAN
+data_JPN <- data_pisa %>% filter(CNT == "JPN")
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$ST004D01T)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$BSMJ)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$BMMJ1)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$BFMJ2)))
+data_JPN<-subset(data_JPN,!(is.na(data_JPN$AGE)))
+data_JPN <- data_JPN %>% filter(AGE>=15 & AGE <=16)
+data_JPN$ST004D01T <- ifelse(data_JPN$ST004D01T ==1 , 1,
+                            ifelse(data_JPN$ST004D01T== 2, 0, ""))
+
+#renaming
+data_JPN <- data_JPN %>% 
+  rename(GENDER = ST004D01T , ISEI= BSMJ , MISEI= BMMJ1 , FISEI= BFMJ2)
+
+#Analysis: Regression
+
+
+model01<-lm(ISEI ~ FISEI + AGE + GENDER, data = data_JPN)
+model02<-lm(ISEI~ FISEI + MISEI + AGE + GENDER, data = data_JPN)
+#stargazer(model01,model02,title="Table 01: Model with expected social status (ISEI) as dependent variable",
+#          dep.var.labels=c("Model 01","Model 02"),
+#          covariate.labels=c("ISEI Father","ISEI Mother","Age","Gender (F=1, M=0)"), type="text",note="Source: OECD(2023). Pisa data.  https://www.oecd.org/pisa/data/ ",align=TRUE)
+
+#model 03
+
+FEMALE<-subset(data_JPN,data_JPN$GENDER==1) 
+MALE <-subset(data_JPN,data_JPN$GENDER==0)
+
+model03_g<-lm(ISEI ~ FISEI + MISEI + AGE, data = FEMALE)
+model03_b<-lm(ISEI~ FISEI + MISEI + AGE, data = MALE)
+#stargazer(model03_g,model03_b,title="Table 02: Model with expected social status (ISEI) as dependent variable by gender",
+#          dep.var.labels=c("Model by gender(1= girls, 2= boys)"),
+ #         covariate.labels=c("ISEI Father","ISEI Mother","Age"), type="text",note="Source: OECD(2023). Pisa data.  https://www.oecd.org/pisa/data/", align=TRUE)
+```

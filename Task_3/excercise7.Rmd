@@ -1,0 +1,215 @@
+---
+title: "Excercise 7- Social inequality"
+author: "Cintya Huaire"
+date: '2023-04-10'
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include = FALSE}
+library(tidyverse)
+library(dplyr)
+library(haven) 
+library(descr) 
+library(corrplot) 
+library(stargazer)
+library(knitr)
+library(kableExtra)
+
+```
+
+**Data Preparation**
+
+See Annex
+
+```{r,echo=FALSE}
+
+# Load IPV data
+# Source: DHS-data 
+
+#Read in data
+DATA00<-read_dta("/Users/CINTYAHUAIRE1/Downloads/India.dta")
+
+DATA01<-subset(DATA00, !(is.na(DATA00$d107)))
+DATA01<-subset(DATA01, !(is.na(DATA01$v131))) 
+DATA01<-subset(DATA01, !(is.na(DATA01$v106))) 
+DATA01<-subset(DATA01, !(is.na(DATA01$v201))) 
+
+#New Variable: IPV
+DATA01$IPV<-"NA" 
+DATA01$IPV[DATA01$d107==0]<-"No IPV" 
+DATA01$IPV[DATA01$d107==1]<-"IPV" 
+DATA01$IPV<- as.factor(DATA01$IPV)
+#New Variable: ETHNIC
+DATA01$ETHNIC<-"Other" 
+DATA01$ETHNIC[DATA01$v131==1]<-"Indigenous" 
+DATA01$ETHNIC[DATA01$v131==6]<-"Majority" 
+DATA01$ETHNIC<- as.factor(DATA01$ETHNIC)
+#New Variable: EDUCATION
+DATA01$CLASS<-"NA" 
+DATA01$CLASS[DATA01$v106==0]<-"Low" 
+DATA01$CLASS[DATA01$v106==1]<-"Low" 
+DATA01$CLASS[DATA01$v106==2]<-"Medium" 
+DATA01$CLASS[DATA01$v106==3]<-"High" 
+DATA01$CLASS <- as.factor(DATA01$CLASS)
+#New Variable: AGE
+DATA01$AGE<-DATA01$v007-DATA01$v010
+
+#New Variable: CHILDREN
+DATA01$CHILDREN<-"NA" 
+DATA01$CHILDREN[DATA01$v201<=0]<-"No children" 
+DATA01$CHILDREN[DATA01$v201>=1 &DATA01$v201<=2]<-"1-2 children" 
+DATA01$CHILDREN[DATA01$v201>2]<-"more than 2 children" 
+DATA01$CHILDREN <- as.factor(DATA01$CHILDREN)
+
+
+```
+
+## Option A
+### A.a)
+
+**The outcome variable is the experience of physical partner violence (IPV). How large is the share of women who report having experienced IPV?**
+
+According to Figure 1 based on the Demographics and Health Survey (DHS) database, the reported percentage of women who have experienced physical partner violence in India is surprisingly low, at around 7.7%. However, this does not accurately reflect the reality of the situation. There are several factors that contribute to the underreporting of physical partner violence in India, such as social norms and cultural values, fear of retaliation or further violence from the perpetrator, lack of trust in law enforcement and judicial systems, and inadequate support services for survivors (Bhattacharya et al., 2019).
+
+Additionally, survivors of partner violence are often economically dependent on their abusers, which makes it difficult for them to leave the relationship or report the violence. Furthermore, there is a common belief that domestic violence is a private matter that should not be discussed outside of the household (Devries et al., 2013).
+
+A study conducted by the International Journal of Community Medicine and Public Health found that the prevalence of physical partner violence in India is actually high, with 31.5% of women experiencing violence from their partners at some point in their lives. Shockingly, only 23% of women reported the violence to someone, and only 3% of cases were reported to the police. These findings are consistent with the underreporting of physical partner violence in India that is seen in the DHS data (Bhattacharya et al., 2019). 
+
+Sources:
+
+[1] Bhattacharya S, Singh A, Mahapatra B. Intimate partner violence in India: An epidemiological review. Int J Community Med Public Health 2019; 6:2150-2157.
+[2] Devries KM, Mak JY, García-Moreno C, et al. Global health. The global prevalence of intimate partner violence against women. Science 2013; 340:1527-1528.
+
+```{r,echo=FALSE}
+
+#Frequencies
+freq(DATA01$IPV, main="Fig.1. Share of women who report having experienced IPV")
+
+
+```
+
+### A.b)
+
+**Select two suitable variables which could help to identify particularly marginalized groups (such as class and ethnicity). Group the variables into meaningful categories. Plot the experience of IPV by VAR1 and VAR2. **
+
+Intimate partner violence (IPV) is a complex social issue that affects individuals worldwide, regardless of their socioeconomic status or background. However, research suggests that certain demographic factors, such as education and number of children, can intersect to exacerbate the risk of IPV among certain marginalized groups. For instance, in India, women with lower levels of education and more children are more likely to experience IPV, indicating that education and number of children can serve as important categorical variables for studying IPV from an intersectional perspective (UN Women, 2019).
+
+One reason why education and number of children are useful variables for studying IPV is that they are often linked to unequal power dynamics within intimate relationships. Women with lower levels of education may have less agency and fewer resources to leave abusive relationships, while women with more children may be financially dependent on their partners and thus less likely to report or leave abusive situations (Fulu et al., 2013). Moreover, women with more children may be perceived as having violated social norms or expectations, which can further stigmatize and isolate them from their communities, making it harder to seek help or support.
+
+The results also support this findings the lowest the level of education the more likely is that women suffer from IPV. Moreover, indiscriminately of the level of education the higher the number of the children that live in the household that more likely it is that women suffer from IPV. However is important to highlight that the IPV can be highly under reported especially in this marginalized groups, due to the unequal powe dynamics and the cultural norms of the society.
+
+[1] Fulu, E., Warner, X., Miedema, S., Jewkes, R., Roselli, T. and Lang, J.(2013). Why Do Some Men Use Violence Against Women and How Can We Prevent It? Quantitative Findings from the United Nations Multi-country Study on Men and Violence in Asia and the Pacific. Bangkok: UNDP, UNFPA, UN Women and UNV.
+
+[2]UN Women. (2019). Facts and figures: Ending violence against women. Retrieved from https://www.unwomen.org/en/what-we-do/ending-violence-against-women/facts-and-figures
+
+```{r,echo=FALSE}
+
+#Bar Chart: Education
+TABLE1 <- table(DATA01$IPV,DATA01$CLASS)
+TABLE2 <- prop.table(TABLE1,2)
+TABLE3 <- as.data.frame(TABLE2)
+ggplot(TABLE3, aes(fill=Var1, x=Var2, y=Freq))+
+geom_bar(stat="identity",position="stack")+
+  ggtitle(" Fig.2. Percentage of women that reported IPV per education attained") + ylab("%")+
+xlab("Highest level of education attained")
+
+#Bar Chart: Number of children
+TABLE1 <- table(DATA01$IPV,DATA01$CHILDREN)
+TABLE2 <- prop.table(TABLE1,2)
+TABLE3 <- as.data.frame(TABLE2)
+ggplot(TABLE3, aes(fill=Var1, x=Var2, y=Freq))+
+geom_bar(stat="identity",position="stack")+ ggtitle("Fig.3. Percetange of mothers per number of children that reported IPV")+ ylab("%")+
+xlab("Number of children on the household")
+
+# Create a new variable INT by dividing CLASS by CHILDREN
+DATA01$INT <- DATA01$CLASS:DATA01$CHILDREN
+
+# Create a crosstab of IPV and INT variables, with column percentages
+crosstab(DATA01$IPV, DATA01$INT, prop.c = TRUE,  plot = FALSE)
+
+
+```
+
+
+
+### A.c)
+
+**In what way is the intersectional approach helpful to understand patterns? How can it be used to provide policy recommendations? What are the main limitations?**
+
+By examining the intersection of various demographic factors with IPV, policymakers can gain a better understanding of the specific needs and challenges faced by different groups, and develop interventions that are tailored to those needs. Considering other variables such as education and number of children to capture the most vulnerable groups that suffer IPV is important on the design of the policies.  It is important to consider these factors when designing policies, from the communication of the policies to the construction of solutions such as hotlines to report IPV, in order to effectively target the most vulnerable populations, who are those that suffer the most from IPV.
+
+However, there is still much work to be done to fully understand the complex and multifaceted nature of IPV, and to design policies and interventions that effectively address this issue in all its dimensions.One of the main limitations is the difficulty of capturing the true extent of IPV. This is due to the particular characteristic of this type of violence, as women may be reluctant to answer questions about their experiences or may not have access to formal reporting mechanisms. This means that official statistics on IPV may not reflect the true prevalence of the problem, which can limit the effectiveness of policy interventions. Additionally, the analysis done in this exercise only presents the relationship between the variables from a descriptive perspective. To fully understand the impact of the intersectional approach to IPV, it will be necessary to conduct econometric models that consider a wider range of variables that can be correlated with the main outcome. Despite these limitations, the intersectional approach remains an important framework for understanding and addressing the multifaceted nature of IPV in India.
+
+
+## Annex
+
+```{r }
+# Load IPV data
+# Source: DHS-data 
+
+#Read in data
+DATA00<-read_dta("/Users/CINTYAHUAIRE1/Downloads/India.dta")
+
+DATA01<-subset(DATA00, !(is.na(DATA00$d107)))
+DATA01<-subset(DATA01, !(is.na(DATA01$v131))) 
+DATA01<-subset(DATA01, !(is.na(DATA01$v106))) 
+DATA01<-subset(DATA01, !(is.na(DATA01$v201))) 
+
+#New Variable: IPV
+DATA01$IPV<-"NA" 
+DATA01$IPV[DATA01$d107==0]<-"No IPV" 
+DATA01$IPV[DATA01$d107==1]<-"IPV" 
+DATA01$IPV<- as.factor(DATA01$IPV)
+#New Variable: ETHNIC
+DATA01$ETHNIC<-"Other" 
+DATA01$ETHNIC[DATA01$v131==1]<-"Indigenous" 
+DATA01$ETHNIC[DATA01$v131==6]<-"Majority" 
+DATA01$ETHNIC<- as.factor(DATA01$ETHNIC)
+#New Variable: EDUCATION
+DATA01$CLASS<-"NA" 
+DATA01$CLASS[DATA01$v106==0]<-"Low" 
+DATA01$CLASS[DATA01$v106==1]<-"Low" 
+DATA01$CLASS[DATA01$v106==2]<-"Medium" 
+DATA01$CLASS[DATA01$v106==3]<-"High" 
+DATA01$CLASS <- as.factor(DATA01$CLASS)
+#New Variable: AGE
+DATA01$AGE<-DATA01$v007-DATA01$v010
+
+#New Variable: CHILDREN
+DATA01$CHILDREN<-"NA" 
+DATA01$CHILDREN[DATA01$v201<=0]<-"No children" 
+DATA01$CHILDREN[DATA01$v201>=1 &DATA01$v201<=2]<-"1-2 children" 
+DATA01$CHILDREN[DATA01$v201>2]<-"more than 2 children" 
+DATA01$CHILDREN <- as.factor(DATA01$CHILDREN)
+
+#Frequencies
+#freq(DATA01$IPV, main="Fig.1. Share of women who report having experienced IPV")
+
+#Bar Chart: Education
+TABLE1 <- table(DATA01$IPV,DATA01$CLASS)
+TABLE2 <- prop.table(TABLE1,2)
+TABLE3 <- as.data.frame(TABLE2)
+#ggplot(TABLE3, aes(fill=Var1, x=Var2, y=Freq))+
+#geom_bar(stat="identity",position="stack")+
+ # ggtitle(" Fig.2. Percentage of women that reported IPV per education attained") + ylab("%")+
+#xlab("Highest level of education attained")
+
+#Bar Chart: Number of children
+TABLE1 <- table(DATA01$IPV,DATA01$CHILDREN)
+TABLE2 <- prop.table(TABLE1,2)
+TABLE3 <- as.data.frame(TABLE2)
+#ggplot(TABLE3, aes(fill=Var1, x=Var2, y=Freq))+
+#geom_bar(stat="identity",position="stack")+ ggtitle("Fig.3. Percetange of mothers per number of children that reported IPV")+ ylab("%")+
+#xlab("Number of children on the household")
+
+# Create a new variable INT by dividing CLASS by CHILDREN
+#DATA01$INT <- DATA01$CLASS:DATA01$CHILDREN
+
+# Create a crosstab of IPV and INT variables, with column percentages
+#crosstab(DATA01$IPV, DATA01$INT, prop.c = TRUE, plot=FALSE)
+```
