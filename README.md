@@ -1,6 +1,8 @@
 # Social Analysis Repository
 
-This repository contains a comprehensive analysis of various social aspects, divided into three main tasks. Each task focuses on a specific topic and provides detailed insights based on data-driven analysis.
+This repository contains three primary tasks from the ["Social Inequality"](https://www.hertie-school.org/en/study/course-catalogue/course/course/social-inequality) course at Hertie School. Each task offers an in-depth exploration of distinct social facets. Every task is centered on a unique topic, delivering comprehensive insights through data-driven analysis.
+
+---
 
 ## Table of Contents
 
